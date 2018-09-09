@@ -4,10 +4,10 @@ const config = require('../../config.js')
 
 
 module.exports = class BaseExchange {
+  
   constructor (name, baseUrl) {
     this.name = name
     this.baseUrl = baseUrl
-    this.orderBooks = {}
     this.symbolTranslationList = {}
   }
   

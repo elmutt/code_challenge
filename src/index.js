@@ -3,42 +3,72 @@ const Bittrex = require('./exchanges/Bittrex')
 const Binance = require('./exchanges/Binance')
 const Hitbtc = require('./exchanges/Hitbtc')
 const Kraken = require('./exchanges/Kraken')
+const fetch = require('node-fetch')
+const config = require('../config')
 const utils = require('./utils')
+const express = require('express')
+const app = express()
+const rateLimit = require("express-rate-limit");
 
-const poloniex = new Poloniex()
-const bittrex = new Bittrex()
-const binance = new Binance()
-const hitbtc = new Hitbtc()
-const kraken = new Kraken()
+// Rate limit requests to prevent exchange rate limiting
+const apiLimiter = rateLimit(config.rateLimits);
+
+app.use("/", apiLimiter);
+
+// TODO return how many exchanges it used (did any not support the pair?)
 
 async function runApi() {
-  
-  const base = 'BTC'
-  const quote = 'ETH'
-  
-  const poloniexResults = await poloniex.getNormalizedOrderBook(base, quote)
-  const bittrexResults = await bittrex.getNormalizedOrderBook(base, quote)
-  const binanceResults = await binance.getNormalizedOrderBook(base, quote)
-  const hitbtcResults = await hitbtc.getNormalizedOrderBook(base, quote)
-  const krakenResults = await kraken.getNormalizedOrderBook(base, quote)
-  
-  const combinedBook = utils.combineEverything([
-    poloniexResults,
-    bittrexResults,
-    binanceResults,
-    hitbtcResults,
-    krakenResults
-  ])
 
-  /*
-  combinedBook.asks.forEach( (ask) => {
-    console.log(ask)
-    console.log('')
+  const poloniex = new Poloniex()
+  const bittrex = new Bittrex()
+  const binance = new Binance()
+  const hitbtc = new Hitbtc()
+  const kraken = new Kraken()
+  
+  app.get('/combined', async (req, res) => {
+    
+    const base = req.query.base ? req.query.base : 'BTC'
+    const quote = req.query.quote ? req.query.quote : 'ETH'
+
+    const combinedOrderBook = await getCombinedOrderBook(base, quote, [poloniex, bittrex, binance, hitbtc, kraken])
+    
+    return res.send(combinedOrderBook)
   })
-  */
+
+  // returns all symbols with supported BTC based order books
+  app.get('/symbols', async (req, res) => {
+    const supportedSymbols = await getSuportedSymbols()
+    res.send(supportedSymbols)
+  })
   
-  console.log('total length', JSON.stringify(combinedBook).length)
-  
+  app.listen(3000, () => console.log('App listening on port 3000!'))  
 }
 
 runApi()
+
+// pulls down and combines order books from the specified exchanges
+async function getCombinedOrderBook(base, quote, exchanges) {
+  const orderBookPromises = exchanges.map( (exchange) => exchange.getNormalizedOrderBook(base, quote).catch( (err) => {
+    console.log(exchange.name + ' getNormalizedOrderBook() error', err)
+  }))
+  
+  const orderBooks = await Promise.all(orderBookPromises)
+
+  // filter out any that failed
+  const filteredOrderBooks = orderBooks.filter( (orderBook) => orderBook !== undefined )
+  
+  return utils.combineOrderbookData(filteredOrderBooks)
+}
+
+// Poloniex is the standard used for all symbols
+async function getSuportedSymbols() {
+  const poloniexTickerData = await fetch('https://poloniex.com/public?command=returnTicker', { method: 'GET', timeout: config.exchangeApiRequestTimeout }).then(res => res.json())
+
+  const poloniexBtcPairs = Object.keys(poloniexTickerData).filter( (pair) => pair.startsWith('BTC_'))
+  
+  const symbols = poloniexBtcPairs.map( (pair) => {
+    return pair.slice(4, pair.length)
+  })
+  
+  return symbols
+}

@@ -35,8 +35,8 @@ module.exports = class Kraken extends BaseExchange {
     // get the full order book
     const orderBookResults = await this._fetch('/0/public/Depth?pair=XETHXXBT&count=' + depth)
     
-    const bids = orderBookResults.result[pair].bids.map( (bid) => { return {quantity: bid[1], price: bid[0] } })
-    const asks = orderBookResults.result[pair].asks.map( (ask) => { return {quantity: ask[1], price: ask[0] } })
+    const bids = orderBookResults.result[pair].bids.map( (bid) => { return {quantity: +bid[1], price: +bid[0] } })
+    const asks = orderBookResults.result[pair].asks.map( (ask) => { return {quantity: +ask[1], price: +ask[0] } })
 
     return {bids, asks, exchange: this.name}
   }

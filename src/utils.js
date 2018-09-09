@@ -1,26 +1,26 @@
 
+const config = require('../config')
 
 module.exports = {
-
-  combineEverything: (orderBooks) => {
-    
-//    const bids = combineOrderBooks(orderBooks, 'bids')
-    const asks = combineOrderBooks(orderBooks, 'asks')
-    return { asks }
+  
+  combineOrderbookData: (orderBooks) => {
+    const bids = combineSide(orderBooks, 'bids')
+    const asks = combineSide(orderBooks, 'asks')
+    return { bids, asks, exchangesIncluded: orderBooks.map( (orderBook) => orderBook.exchange ) }
   },
   
 }
 
-// attach the running total volumes for each exchange to each price point.
-// Side is either 'bids' or 'asks' because they have slightly different logic
-function combineOrderBooks(orderBooks, side) {
+
+// combines all orders across all books and puts any orders that have the same price into the same order
+function combineSide(orderBooks, side) {
 
   if(side !== 'bids' && side !== 'asks')
   {
     throw new error('Invalid side specified')
   }
   
-  // attach the name of the exchanges to each bid price point
+  // attach the name of the exchanges to each order
   const allOrders = orderBooks.map( (orderBook) => {
     return orderBook[side].map( (order) => {
       order.exchange = orderBook.exchange
@@ -28,39 +28,73 @@ function combineOrderBooks(orderBooks, side) {
     })
   })
 
-  // exchangeVolumes tracks our running total volume for each exchange as we traverse the price points
-  const exchangeVolumes = orderBooks.reduce( (accumulator, orderBook) => {
-    accumulator[orderBook.exchange] = 0
-    return accumulator
-  }, {})
+  // concatenate all orders from all exchanges into a single array
+  const combinedOrders = allOrders.reduce( (accumulator, orders) => accumulator.concat(orders), [])
 
-  // combine all the orders and
-  const combined = allOrders.reduce( (accumulator, bids) => accumulator.concat(bids), [])
-
-  // Sort. Bids are initially sorted in reverse order so that volume running totals add up correctly
-  const combinedSorted = (side === 'asks') ? combined.sort(compare) : combined.sort(compareReversed)
-
-  // attach the running total volumes for each exchange to each price point
-  const orders = combinedSorted.map( (order, index) => {
-    // add quantity from this price point to the running total volume of the corresponding exchange
-    exchangeVolumes[order.exchange] += +order.quantity
-    // attach the running total volume for each exchange to this price point
-    Object.keys(exchangeVolumes).forEach( (exchange) => {
-      order['volume_' + exchange] = exchangeVolumes[exchange]
-    })
-    // add up the running total volume of all exchanges and attach to this price point
-    order.totalVolume = Object.values(exchangeVolumes).reduce( (acc, val) => acc+val)
-    return order
-  })
+  // Reduce precision on prices to demonstrate multiple orders being combined
+  const precisionReducedOrders = reducePrecision(combinedOrders)
   
-  // Bids need to be re-sorted in correct order since they were originally sorted in reverse
-  return (side === 'asks') ? orders : orders.sort(compare)
+  const sortedOrders = precisionReducedOrders.sort(compare)
+  
+  const combinedPriceOrders = []
+
+  // make a new set of orders that combine any orders with identical prices
+  // TODO triple check this logic and test it real good
+  for(let i=0;i<sortedOrders.length;i++) {
+    let ordersWithMatchingPrice = []
+    // found 2 or more sequential orders with the same price.  short circuit if at end of orders
+    if( (i + 1) < sortedOrders.length && sortedOrders[i].price === sortedOrders[i + 1].price ) {
+      // push the first order
+      ordersWithMatchingPrice.push(sortedOrders[i])
+      do {
+        i++;
+        // push the next order
+        ordersWithMatchingPrice.push(sortedOrders[i])
+        //continue as long as there is a subsequent order with matching price.  short circuit if at end of orders
+      } while( (i + 1) < sortedOrders.length && sortedOrders[i].price === sortedOrders[i + 1].price)
+      
+      // Combine all of the matching price orders
+      const combinedOrder = combineOrders(ordersWithMatchingPrice)
+      combinedPriceOrders.push(combinedOrder)
+    }
+    else {
+      combinedPriceOrders.push(sortedOrders[i])
+    }
+  }
+  
+  return combinedPriceOrders
 }
 
 function compare(a, b) {
   return a.price - b.price
 }
 
-function compareReversed(b, a) {
-  return a.price - b.price
+// Used to reduce precision so orders from different exchanges have the same price so they can be combined
+function reducePrecision(orders) {
+  return orders.map( (order) => {
+    order.price = order.price.toFixed(config.pricePrecision)
+    return order
+  })
+}
+
+// combines multiple orders at the same price into a single with info about what proportion of this order belongs to each exchange
+function combineOrders(orders) {
+  
+  // Sanity check that all order prices are the same
+  orders.forEach( (order) => {
+    if(order.price !== orders[0].price) {
+      throw new Error('combineOrders prices vary')
+    }
+  })
+  
+  const newOrder = {price: orders[0].price}
+
+  const exchangeQuantities = orders.reduce( (accumulator, order) => {
+    accumulator[order.exchange] = order.quantity +  (accumulator[order.exchange] ? accumulator[order.exchange]  : 0)
+    return accumulator
+  }, {})
+  
+  newOrder.exchangeQuantities = exchangeQuantities
+  
+  return newOrder
 }

@@ -22,8 +22,8 @@ module.exports = class Poloniex extends BaseExchange {
     const orderBookResults = await this._fetch('/public?command=returnOrderBook&currencyPair=' + pair + '&depth=' + depth)
 
     // normalize the results into a standard format
-    const bids = orderBookResults.bids.map( (bid) => { return {quantity: bid[1], price: bid[0] } })
-    const asks = orderBookResults.asks.map( (ask) => { return {quantity: ask[1], price: ask[0] } })
+    const bids = orderBookResults.bids.map( (bid) => { return {quantity: +bid[1], price: +bid[0] } })
+    const asks = orderBookResults.asks.map( (ask) => { return {quantity: +ask[1], price: +ask[0] } })
     
     return {bids, asks, exchange: this.name}    
   }

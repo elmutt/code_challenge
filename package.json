@@ -10,6 +10,8 @@
   "author": "Sean Luther",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.16.3",
+    "express-rate-limit": "^3.1.1",
     "node-fetch": "^2.2.0"
   }
 }
