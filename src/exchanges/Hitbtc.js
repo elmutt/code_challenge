@@ -1,4 +1,5 @@
 const BaseExchange = require('./BaseExchange')
+const config = require('../../config')
 
 module.exports = class Hitbtc extends BaseExchange {
 
@@ -20,8 +21,8 @@ module.exports = class Hitbtc extends BaseExchange {
 
     // normalize the results into a standard format
 
-    const bids = orderBookResults.bid.map( (bid) => { return { quantity: +bid.size, price: +bid.price } })
-    const asks = orderBookResults.ask.map( (ask) => { return { quantity: +ask.size, price: +ask.price } })
+    const bids = orderBookResults.bid.map( (bid) => { return { quantity: +bid.size, price: (+bid.price).toFixed(config.pricePrecision) } })
+    const asks = orderBookResults.ask.map( (ask) => { return { quantity: +ask.size, price: (+ask.price).toFixed(config.pricePrecision) } })
 
     return {bids, asks, exchange: this.name}
   }

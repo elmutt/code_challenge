@@ -5,6 +5,6 @@ module.exports = {
     windowMs: 5 * 1000, // 5 seconds
     max: 1
   },
-  pricePrecision: 4,
+  pricePrecision: 5,
   port: 3001
 }

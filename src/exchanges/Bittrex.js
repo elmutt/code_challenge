@@ -1,4 +1,5 @@
 const BaseExchange = require('./BaseExchange')
+const config = require('../../config')
 
 module.exports = class Bittrex extends BaseExchange {
   
@@ -20,9 +21,8 @@ module.exports = class Bittrex extends BaseExchange {
 
     // normalize the results into a standard format
 
-    const bids = orderBookResults.result.buy.map( (bid) => { return { quantity: +bid.Quantity, price: +bid.Rate } })
-    const asks = orderBookResults.result.sell.map( (ask) => { return { quantity: +ask.Quantity, price: +ask.Rate } })
-    
+    const bids = orderBookResults.result.buy.map( (bid) => { return { quantity: +bid.Quantity, price: (+bid.Rate).toFixed(config.pricePrecision) } })
+    const asks = orderBookResults.result.sell.map( (ask) => { return { quantity: +ask.Quantity, price: (+ask.Rate).toFixed(config.pricePrecision) } })
     
     return {bids, asks, exchange: this.name}
   }

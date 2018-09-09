@@ -1,4 +1,5 @@
 const BaseExchange = require('./BaseExchange')
+const config = require('../../config')
 
 module.exports = class Binance extends BaseExchange {
   
@@ -26,8 +27,8 @@ module.exports = class Binance extends BaseExchange {
 
     // normalize the results into a standard format
 
-    const bids = orderBookResults.bids.map( (bid) => { return {quantity: +bid[1], price: +bid[0] } })
-    const asks = orderBookResults.asks.map( (ask) => { return {quantity: +ask[1], price: +ask[0] } })
+    const bids = orderBookResults.bids.map( (bid) => { return {quantity: +bid[1], price: (+bid[0]).toFixed(config.pricePrecision) } })
+    const asks = orderBookResults.asks.map( (ask) => { return {quantity: +ask[1], price: (+ask[0]).toFixed(config.pricePrecision) } })
 
 
     return {bids, asks, exchange: this.name}

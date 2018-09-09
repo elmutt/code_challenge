@@ -11,13 +11,11 @@ const cors = require('cors')
 const app = express()
 const rateLimit = require("express-rate-limit");
 
-// Rate limit requests to prevent exchange rate limiting
+// Rate limit requests to prevent exchange rate limiting problems
 const apiLimiter = rateLimit(config.rateLimits);
-
 app.use("/", apiLimiter);
-app.use(cors())
 
-// TODO return how many exchanges it used (did any not support the pair?)
+app.use(cors())
 
 async function runApi() {
 
@@ -31,8 +29,8 @@ async function runApi() {
     
     const base = req.query.base ? req.query.base : 'BTC'
     const quote = req.query.quote ? req.query.quote : 'ETH'
-
-    const combinedOrderBook = await getCombinedOrderBook(base, quote, [poloniex, bittrex, binance, hitbtc, kraken])
+    
+    const combinedOrderBook = await getCombinedOrderBook(base, quote, [bittrex, poloniex, binance, hitbtc, kraken])
     
     return res.send(combinedOrderBook)
   })
@@ -65,9 +63,7 @@ async function getCombinedOrderBook(base, quote, exchanges) {
 // Poloniex is the standard used for all symbols
 async function getSuportedSymbols() {
   const poloniexTickerData = await fetch('https://poloniex.com/public?command=returnTicker', { method: 'GET', timeout: config.exchangeApiRequestTimeout }).then(res => res.json())
-
   const poloniexBtcPairs = Object.keys(poloniexTickerData).filter( (pair) => pair.startsWith('BTC_'))
-  
   const symbols = poloniexBtcPairs.map( (pair) => {
     return pair.slice(4, pair.length)
   })

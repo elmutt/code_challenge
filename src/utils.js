@@ -27,14 +27,11 @@ function combineSide(orderBooks, side) {
       return order
     })
   })
-
+  
   // concatenate all orders from all exchanges into a single array
   const combinedOrders = allOrders.reduce( (accumulator, orders) => accumulator.concat(orders), [])
-
-  // Reduce precision on prices to demonstrate multiple orders being combined
-  const precisionReducedOrders = reducePrecision(combinedOrders)
   
-  const sortedOrders = precisionReducedOrders.sort(compare)
+  const sortedOrders = combinedOrders.sort(compare)
   
   const combinedPriceOrders = []
 
@@ -61,20 +58,11 @@ function combineSide(orderBooks, side) {
       combinedPriceOrders.push(sortedOrders[i])
     }
   }
-  
   return combinedPriceOrders
 }
 
 function compare(a, b) {
   return a.price - b.price
-}
-
-// Used to reduce precision so orders from different exchanges have the same price so they can be combined
-function reducePrecision(orders) {
-  return orders.map( (order) => {
-    order.price = order.price.toFixed(config.pricePrecision)
-    return order
-  })
 }
 
 // combines multiple orders at the same price into a single with info about what proportion of this order belongs to each exchange
