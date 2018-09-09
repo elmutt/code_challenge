@@ -7,6 +7,7 @@ const fetch = require('node-fetch')
 const config = require('../config')
 const utils = require('./utils')
 const express = require('express')
+const cors = require('cors')
 const app = express()
 const rateLimit = require("express-rate-limit");
 
@@ -14,6 +15,7 @@ const rateLimit = require("express-rate-limit");
 const apiLimiter = rateLimit(config.rateLimits);
 
 app.use("/", apiLimiter);
+app.use(cors())
 
 // TODO return how many exchanges it used (did any not support the pair?)
 
@@ -41,7 +43,7 @@ async function runApi() {
     res.send(supportedSymbols)
   })
   
-  app.listen(3000, () => console.log('App listening on port 3000!'))  
+  app.listen(config.port, () => console.log('App listening on port ' + config.port))  
 }
 
 runApi()
