@@ -19,7 +19,7 @@ app.use("/", apiLimiter);
 
 async function runApi() {
 
-  const poloniex = new Poloniex()
+  const poloniex = new Poloniex() 
   const bittrex = new Bittrex()
   const binance = new Binance()
   const hitbtc = new Hitbtc()
