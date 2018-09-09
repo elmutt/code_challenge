@@ -55,7 +55,9 @@ function combineSide(orderBooks, side) {
       combinedPriceOrders.push(combinedOrder)
     }
     else {
-      combinedPriceOrders.push(sortedOrders[i])
+      // Single orders are passed to combineOrders() to make sure they are in the combineOrders() format
+      const combinedOrder = combineOrders([sortedOrders[i]])
+      combinedPriceOrders.push(combinedOrder)
     }
   }
   return combinedPriceOrders
@@ -83,6 +85,7 @@ function combineOrders(orders) {
   }, {})
   
   newOrder.exchangeQuantities = exchangeQuantities
+  newOrder.combinedOrderCount = orders.length
   
   return newOrder
 }
