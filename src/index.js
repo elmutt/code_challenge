@@ -27,19 +27,32 @@ async function runApi() {
   
   app.get('/combined', async (req, res) => {
     
-    const base = req.query.base ? req.query.base : 'BTC'
-    const quote = req.query.quote ? req.query.quote : 'ETH'
+    const base = req.query.base ? req.query.base : config.defaultBase
+    const quote = req.query.quote ? req.query.quote : config.defaultQuote
+    const precision = req.query.precision ? req.query.precision : config.pricePrecision
     
-    const combinedOrderBook = await getCombinedOrderBook(base, quote, [bittrex, poloniex, binance, hitbtc, kraken])
+    const combinedOrderBook = await getCombinedOrderBook(base, quote, [bittrex, poloniex, binance, hitbtc, kraken], precision)
     
     return res.send(combinedOrderBook)
   })
 
-  // returns all symbols with supported BTC based order books
+  // returns all BTC based symbols from poloniex.  We use this as our list of "quote" coins to choose from
   app.get('/symbols', async (req, res) => {
     const supportedSymbols = await getSuportedSymbols()
     res.send(supportedSymbols)
   })
+
+  app.get('/overlaps', async (req, res) => {
+
+    const base = req.query.base ? req.query.base : config.defaultBase
+    const quote = req.query.quote ? req.query.quote : config.defaultQuote
+
+    const overlaps = await detectOverlap(base, quote, [bittrex, poloniex, binance, hitbtc, kraken])
+    
+    return res.send(overlaps)
+  })
+
+  
   
   app.listen(config.port, () => console.log('App listening on port ' + config.port))  
 }
@@ -47,8 +60,22 @@ async function runApi() {
 runApi()
 
 // pulls down and combines order books from the specified exchanges
-async function getCombinedOrderBook(base, quote, exchanges) {
-  const orderBookPromises = exchanges.map( (exchange) => exchange.getNormalizedOrderBook(base, quote).catch( (err) => {
+// TODO same for here as below use the general purpose get exchanges function.  booya!
+async function detectOverlap(base, quote, exchanges) {
+  const orderBookPromises = exchanges.map( (exchange) => exchange.getNormalizedOrderBook(base, quote, 8).catch( (err) => {
+    console.log(exchange.name + ' getNormalizedOrderBook() error', err)
+  }))
+  const orderBooks = await Promise.all(orderBookPromises)
+  // filter out any that failed
+  const filteredOrderBooks = orderBooks.filter( (orderBook) => orderBook !== undefined )
+  return utils.detectOverlap(filteredOrderBooks)
+}
+
+
+// pulls down and combines order books from the specified exchanges
+// TODO make this function get all order books and use it in conjunction with utils.combineOrderbookData().   getCombinedOrderBook is a dumb name.  call it getAllOrderBooks() maybe?
+async function getCombinedOrderBook(base, quote, exchanges, precision) {
+  const orderBookPromises = exchanges.map( (exchange) => exchange.getNormalizedOrderBook(base, quote, precision).catch( (err) => {
     console.log(exchange.name + ' getNormalizedOrderBook() error', err)
   }))
   

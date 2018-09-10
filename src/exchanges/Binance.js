@@ -11,7 +11,7 @@ module.exports = class Binance extends BaseExchange {
     }
   }
   
-  async getNormalizedOrderBook(base, quote) {
+  async getNormalizedOrderBook(base, quote, precision) {
 
     const translatedBase = this.translateSymbol(base)
     const translatedQuote = this.translateSymbol(quote)
@@ -27,8 +27,8 @@ module.exports = class Binance extends BaseExchange {
 
     // normalize the results into a standard format
 
-    const bids = orderBookResults.bids.map( (bid) => { return {quantity: +bid[1], price: (+bid[0]).toFixed(config.pricePrecision) } })
-    const asks = orderBookResults.asks.map( (ask) => { return {quantity: +ask[1], price: (+ask[0]).toFixed(config.pricePrecision) } })
+    const bids = orderBookResults.bids.map( (bid) => { return {quantity: +bid[1], price: (+bid[0]).toFixed(precision) } })
+    const asks = orderBookResults.asks.map( (ask) => { return {quantity: +ask[1], price: (+ask[0]).toFixed(precision) } })
 
 
     return {bids, asks, exchange: this.name}

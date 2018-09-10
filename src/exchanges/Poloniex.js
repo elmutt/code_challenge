@@ -8,7 +8,7 @@ module.exports = class Poloniex extends BaseExchange {
     this.symbolTranslationList = { } // no translation needed for this exchange
   }
   
-  async getNormalizedOrderBook(base, quote) {
+  async getNormalizedOrderBook(base, quote, precision) {
     
     const translatedBase = this.translateSymbol(base)
     const translatedQuote = this.translateSymbol(quote)
@@ -23,8 +23,8 @@ module.exports = class Poloniex extends BaseExchange {
     const orderBookResults = await this._fetch('/public?command=returnOrderBook&currencyPair=' + pair + '&depth=' + depth)
 
     // normalize the results into a standard format
-    const bids = orderBookResults.bids.map( (bid) => { return {quantity: +bid[1], price: (+bid[0]).toFixed(config.pricePrecision) } })
-    const asks = orderBookResults.asks.map( (ask) => { return {quantity: +ask[1], price: (+ask[0]).toFixed(config.pricePrecision) } })
+    const bids = orderBookResults.bids.map( (bid) => { return {quantity: +bid[1], price: (+bid[0]).toFixed(precision) } })
+    const asks = orderBookResults.asks.map( (ask) => { return {quantity: +ask[1], price: (+ask[0]).toFixed(precision) } })
     
     return {bids, asks, exchange: this.name}    
   }

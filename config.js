@@ -2,9 +2,12 @@
 module.exports = {
   exchangeApiRequestTimeout: 10000, // exchanges must respond within 10 seconds
   rateLimits: {
-    windowMs: 5 * 1000, // 5 seconds
-    max: 1
+    windowMs: 10 * 1000, // 5 seconds
+    max: 10
   },
-  pricePrecision: 7,
-  port: 3001
+  pricePrecision: 4,
+  port: 3001,
+  defaultBase: 'BTC',
+  defaultQuote: 'ETH',
+  
 }

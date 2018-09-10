@@ -2,13 +2,39 @@
 const config = require('../config')
 
 module.exports = {
-  
+
   combineOrderbookData: (orderBooks) => {
     const bids = combineSide(orderBooks, 'bids')
     const asks = combineSide(orderBooks, 'asks')
-    return { bids, asks, exchangesIncluded: orderBooks.map( (orderBook) => orderBook.exchange ) }
+    return {bids, asks, exchangesIncluded: orderBooks.map((orderBook) => orderBook.exchange)}
   },
-  
+
+  // TODO finish this.  make it not dependent on the precision specified on the front end (use 8 digits). 
+// TODO Then write unit tests and clean everything up and put online!!!
+  detectOverlap: (orderBooks) => {
+    const overlaps = []
+    for (let i = 0; i < orderBooks.length - 1; i++) {
+      for (let j = i + 1; j < orderBooks.length; j++) {
+        const bidsBook1 = orderBooks[i].bids
+        const asksBook1 = orderBooks[i].asks
+        const exchange1 = orderBooks[i].exchange
+
+        const asksBook2 = orderBooks[j].asks
+        const bidsBook2 = orderBooks[j].bids
+        const exchange2 = orderBooks[j].exchange
+        
+        // TODO reverse the comapre symbols here so it works correctly
+        if(+bidsBook1[0].price > +asksBook2[0].price) {
+          overlaps.push({bid: bidsBook1[0], ask: asksBook2[0], bidExchange: exchange1, askExchange: exchange2})
+        }
+        if(+asksBook1[0].price < +bidsBook2[0].price) {
+          overlaps.push({ask: asksBook1[0], bid: bidsBook2[0], bidExchange: exchange2, askExchange: exchange1})
+        }
+        
+      }
+    }
+    return overlaps
+  }
 }
 
 

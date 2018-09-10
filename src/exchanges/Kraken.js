@@ -22,7 +22,7 @@ module.exports = class Kraken extends BaseExchange {
     }
   }
 
-  async getNormalizedOrderBook(base, quote) {
+  async getNormalizedOrderBook(base, quote, precision) {
 
     const translatedBase = this.translateSymbol(base)
     const translatedQuote = this.translateSymbol(quote)
@@ -36,8 +36,8 @@ module.exports = class Kraken extends BaseExchange {
     // get the full order book
     const orderBookResults = await this._fetch('/0/public/Depth?pair=XETHXXBT&count=' + depth)
     
-    const bids = orderBookResults.result[pair].bids.map( (bid) => { return {quantity: +bid[1], price: (+bid[0]).toFixed(config.pricePrecision) } })
-    const asks = orderBookResults.result[pair].asks.map( (ask) => { return {quantity: +ask[1], price: (+ask[0]).toFixed(config.pricePrecision) } })
+    const bids = orderBookResults.result[pair].bids.map( (bid) => { return {quantity: +bid[1], price: (+bid[0]).toFixed(precision) } })
+    const asks = orderBookResults.result[pair].asks.map( (ask) => { return {quantity: +ask[1], price: (+ask[0]).toFixed(precision) } })
 
     return {bids, asks, exchange: this.name}
   }

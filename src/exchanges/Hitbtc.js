@@ -8,7 +8,7 @@ module.exports = class Hitbtc extends BaseExchange {
     this.symbolTranslationList = { } // no translation needed for this exchange
   }
 
-  async getNormalizedOrderBook(base, quote) {
+  async getNormalizedOrderBook(base, quote, precision) {
 
     const translatedBase = this.translateSymbol(base)
     const translatedQuote = this.translateSymbol(quote)
@@ -21,8 +21,8 @@ module.exports = class Hitbtc extends BaseExchange {
 
     // normalize the results into a standard format
 
-    const bids = orderBookResults.bid.map( (bid) => { return { quantity: +bid.size, price: (+bid.price).toFixed(config.pricePrecision) } })
-    const asks = orderBookResults.ask.map( (ask) => { return { quantity: +ask.size, price: (+ask.price).toFixed(config.pricePrecision) } })
+    const bids = orderBookResults.bid.map( (bid) => { return { quantity: +bid.size, price: (+bid.price).toFixed(precision) } })
+    const asks = orderBookResults.ask.map( (ask) => { return { quantity: +ask.size, price: (+ask.price).toFixed(precision) } })
 
     return {bids, asks, exchange: this.name}
   }
