@@ -17,6 +17,7 @@ describe('api testing', function () {
     fetch('http://localhost:3001/symbols', { method: 'GET'}).then(res => res.json()).then( (res) => {
       assert(typeof res === 'object')
       assert(res.length > 0)
+      assert(res.includes('ETH'))
     })
   })
 
