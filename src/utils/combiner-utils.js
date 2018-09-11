@@ -3,13 +3,19 @@ const config = require('../../config')
 module.exports = {
   // combines orderBooks and returns them with a list of the exchanges that were combined
   combineOrderbookData: (orderBooks) => {
+    
     const bids = combineSide(orderBooks, 'bids')
     const asks = combineSide(orderBooks, 'asks')
     return {bids, asks, exchangesIncluded: orderBooks.map((orderBook) => orderBook.exchange)}
   },
+  
+  // exported for testing
+  combineSide,
+  // exporeted for testing
+  combineOrders
 }
 
-// combines all orders across all books and puts any orders that have the same price into the same order
+// combines all orders across all books and puts any orders that have the same price into the same order\
 function combineSide(orderBooks, side) {
 
   if (side !== 'bids' && side !== 'asks') {
@@ -27,7 +33,8 @@ function combineSide(orderBooks, side) {
   // concatenate all orders from all exchanges into a single array
   const combinedOrders = allOrders.reduce((accumulator, orders) => accumulator.concat(orders), [])
 
-  const sortedOrders = combinedOrders.sort(compare)
+  // sort orders from lowest to highest price
+  const sortedOrders = combinedOrders.sort( (a, b) => (a.price < b.price) )
 
   const combinedPriceOrders = []
 
@@ -79,9 +86,4 @@ function combineOrders(orders) {
   newOrder.combinedOrderCount = orders.length
 
   return newOrder
-}
-
-// used in sorting
-function compare(a, b) {
-  return a.price - b.price
 }

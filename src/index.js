@@ -26,7 +26,6 @@ async function runApi() {
   
   // returns combined orders for the specified base-quote orderbook
   app.get('/combined', async (req, res) => {
-
     const base = req.query.base ? req.query.base : config.defaultBase
     const quote = req.query.quote ? req.query.quote : config.defaultQuote
     const precision = req.query.precision ? req.query.precision : config.pricePrecision
@@ -38,20 +37,15 @@ async function runApi() {
 
   // returns all BTC based symbols from poloniex.  We use this as our list of "quote" coins to choose from
   app.get('/symbols', async (req, res) => {
-
     const supportedSymbols = await utils.getSuportedSymbols()
-
     res.send(supportedSymbols)
   })
 
   // returns any orders that overlap across exchanges.
   app.get('/overlaps', async (req, res) => {
-
     const base = req.query.base ? req.query.base : config.defaultBase
     const quote = req.query.quote ? req.query.quote : config.defaultQuote
-
     const overlaps = await utils.detectOverlap(base, quote, [bittrex, poloniex, binance, hitbtc, kraken])
-    
     return res.send(overlaps)
   })
 
@@ -61,3 +55,6 @@ async function runApi() {
 }
 
 runApi()
+
+// exported for testing
+module.exports = app; 
